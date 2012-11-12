@@ -1,0 +1,16 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    hz2py (1.0.0)
+    rmmseg-cpp (0.2.9)
+    ruby-pinyin (0.1.0)
+    zidian (0.3.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  hz2py
+  rmmseg-cpp
+  ruby-pinyin
+  zidian
