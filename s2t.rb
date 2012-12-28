@@ -1,3 +1,5 @@
+# ugly script to convert 2nd column from 简体字 to 繁体字
+
 require 'hz2py'
 
 filename = ARGV[0]
