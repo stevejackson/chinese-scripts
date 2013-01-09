@@ -3,7 +3,7 @@
 #
 # ruby parse.rb [input book text to parse for new words] [known vocab list] [new words CSV]
 
-require 'rmmseg' 
+require 'rmmseg'
 require 'zidian'
 require 'ruby-pinyin'
 
@@ -31,14 +31,16 @@ def create_word_array(text)
     word_results << tok.text.strip.force_encoding('utf-8') if tok.text.strip != ''
   end
 
-  word_results.uniq
+  word_results_2 = word_results.inject(Hash.new(0)) {|h,i| h[i] += 1; h }
+  word_results = word_results_2.sort_by { |key, value| value }
+  #word_results.uniq
 end 
 
 def ignore_word?(word)
   ignored_characters = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '千', '万', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '零']
   ignore_word = true
 
-  word.strip.each_char do |char|
+  word[0].strip.each_char do |char|
     if !ignored_characters.include? char
       ignore_word = false
       break
@@ -61,10 +63,12 @@ book_words = create_word_array(file_text)
 puts ''
 puts "#{book_filename} has #{book_words.count} words."
 
-file_text = File.open(known_vocab_filename, 'r').read
-file_text = clean_text(file_text)
-
-known_words = create_word_array(file_text)
+known_words = []
+File.open(known_vocab_filename, 'r').each do |line|
+  line = clean_text(line)
+  known_words << line.strip
+end
+known_words.uniq!
 
 puts ""
 puts "#{known_vocab_filename} has #{known_words.count} already known vocab words."
@@ -76,8 +80,8 @@ book_words.each_with_index do |word, i|
   if i % 1000 == 0
     puts "Comparing at index #{i}..."
   end
-  next if known_words.include?(word)
-  next if ignore_word?(word)
+  next if known_words.include?(word[0])
+  next if ignore_word?(word[0])
   new_words << word
 end
 
@@ -91,17 +95,18 @@ new_words.each_with_index do |x, i|
     puts "Compiling new words definitions CSV at index #{i}..."
   end
 
-  next if !x || x.strip == ''
+  next if !x || x[0].strip == ''
+  next if x[1] <= 1
 
-  pinyin = PinYin.of_string(x, true).join(' ')
+  pinyin = PinYin.of_string(x[0], true).join(' ')
   next if !pinyin || pinyin.strip == ''
   pinyin.downcase!
 
-  definition = Zidian.find(x)
+  definition = Zidian.find(x[0])
   next if !definition || !definition.first || !definition.first.english
   definition = definition.first.english.join(' / ')
 
-  result_data << [x, pinyin, definition]
+  result_data << [x[0], pinyin, definition, x[1]]
 end
 
 File.open(new_words_filename, 'w') do |file|
